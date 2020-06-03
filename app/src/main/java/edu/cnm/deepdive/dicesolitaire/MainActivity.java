@@ -1,5 +1,7 @@
 package edu.cnm.deepdive.dicesolitaire;
 
+import static edu.cnm.deepdive.dicesolitaire.model.Roll.NUM_FACES;
+
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -25,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
   private static final String DIE_FACE_ID_FORMAT = "face_%d";
 
   private int minPairValue = 2;
-  private int maxPairValue = 2 * Roll.NUM_FACES;
+  private int maxPairValue = 2 * NUM_FACES;
   private TextView[] pairLabels;
   private ProgressBar[] pairCounts;
   private TextView[] scratchLabels;
@@ -51,9 +53,9 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void setupScratchControls(Resources res, NumberFormat formatter) {
-    scratchLabels = new TextView[Roll.NUM_FACES];
-    scratchCounts = new ProgressBar[Roll.NUM_FACES];
-    for (int i = 1; i <= Roll.NUM_FACES; i++) {
+    scratchLabels = new TextView[NUM_FACES];
+    scratchCounts = new ProgressBar[NUM_FACES];
+    for (int i = 1; i <= NUM_FACES; i++) {
       String labelIdString = String.format(SCRATCH_LABEL_ID_FORMAT, i);
       int labelId = res.getIdentifier(labelIdString, "id", getPackageName());
       scratchLabels[i - 1] = findViewById(labelId);
@@ -74,8 +76,8 @@ public class MainActivity extends AppCompatActivity {
       diceImages[i] = findViewById(id);
       diceImages[i].setImageDrawable(getDrawable(R.drawable.face_6));
     }
-    diceFaces = new Drawable[Roll.NUM_FACES];
-    for (int i = 0; i < Roll.NUM_FACES ; i++) {
+    diceFaces = new Drawable[NUM_FACES];
+    for (int i = 0; i < NUM_FACES ; i++) {
       String idString = String.format(DIE_FACE_ID_FORMAT, i + 1);
       int id = res.getIdentifier(idString, "drawable", getPackageName());
       Drawable face = getDrawable(id);
@@ -84,10 +86,14 @@ public class MainActivity extends AppCompatActivity {
     roller.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
-        Roll roll = new Roll(rng);
-        // TODO Display dice images.
+        roller.setEnabled(false);
+        new DiceAnimator().start();
       }
     });
+  }
+
+  private void displayDiceFace(int die, int face) {
+    diceImages[die].setImageDrawable(diceFaces[face]);
   }
 
   private void setupPairControls(Resources res, NumberFormat formatter) {
@@ -105,5 +111,42 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
+  private class DiceAnimator extends Thread {
+
+    @Override
+    public void run() {
+      Roll roll = new Roll(rng);
+      for (int i = 0; i < Roll.NUM_DICE; i++) {
+        final int dieIndex = i;
+        for (int j = 0; j < 10; j++) {
+          int animationFace = rng.nextInt(NUM_FACES);
+          displayFace(dieIndex, animationFace + 1);
+          try {
+            sleep(50);
+          } catch (InterruptedException expected) {
+            // Ignore exception and get on with life.
+          }
+        }
+        final int value = roll.getDice()[i];
+        displayFace(dieIndex, value);
+      }
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          roller.setEnabled(true);
+        }
+      });
+    }
+
+    private void displayFace(final int dieIndex, final int value) {
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          displayDiceFace(dieIndex, value - 1);
+        }
+      });
+    }
+
+  }
 
 }
