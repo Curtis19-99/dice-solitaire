@@ -80,15 +80,11 @@ public class MainActivity extends AppCompatActivity {
     for (int i = 0; i < NUM_FACES ; i++) {
       String idString = String.format(DIE_FACE_ID_FORMAT, i + 1);
       int id = res.getIdentifier(idString, "drawable", getPackageName());
-      Drawable face = getDrawable(id);
       diceFaces[i] = getDrawable(id);
     }
-    roller.setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        roller.setEnabled(false);
-        new DiceAnimator().start();
-      }
+    roller.setOnClickListener((v) -> {
+      roller.setEnabled(false);
+      new DiceAnimator().start();
     });
   }
 
@@ -130,21 +126,11 @@ public class MainActivity extends AppCompatActivity {
         final int value = roll.getDice()[i];
         displayFace(dieIndex, value);
       }
-      runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          roller.setEnabled(true);
-        }
-      });
+      runOnUiThread(() -> roller.setEnabled(true));
     }
 
     private void displayFace(final int dieIndex, final int value) {
-      runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          displayDiceFace(dieIndex, value - 1);
-        }
-      });
+      runOnUiThread(() -> displayDiceFace(dieIndex, value - 1));
     }
 
   }
